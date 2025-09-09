@@ -8,17 +8,14 @@
 import express from 'express'
 import { StatusCodes } from 'http-status-codes'
 
-// Local
-import { boardRoutes } from '~/routes/v1/boardRoutes.js'
-
 const Router = express.Router()
 
-/* Check APIs v1/status */
-Router.get('/status', (req, res) => {
-  res.status(StatusCodes.OK).json({ message: 'APIs V1 are ready to use' })
-})
+Router.route('/')
+  .get((req, res) => {
+    res.status(StatusCodes.OK).json({ message: 'GET: APIs get list board' })
+  })
+  .post((req, res) => {
+    res.status(StatusCodes.CREATED).json({ message: 'POST: APIs created new board' })
+  })
 
-/* Boards APIs */
-Router.use('/boards', boardRoutes)
-
-export const APIs_V1 = Router
+export const boardRoutes = Router
