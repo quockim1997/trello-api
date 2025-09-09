@@ -17,6 +17,10 @@ import { APIs_V1 } from '~/routes/v1/index.js'
 const START_SERVER = () => {
   const app = express()
 
+  // Cho phép gửi dữ liệu json data
+  app.use(express.json())
+
+  // Use APIs V1
   app.use('/v1', APIs_V1)
 
   app.listen(env.APP_PORT, env.APP_HOST, () => {
