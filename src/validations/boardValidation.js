@@ -9,6 +9,9 @@
 import Joi from 'joi'
 import { StatusCodes } from 'http-status-codes'
 
+// Local
+import ApiError from '~/utils/ApiError.js'
+
 const createNew = async (req, res, next) => {
   /**
    * Note: Mặc định chúng ta không cần phải custom message ở phía BE làm gì
@@ -34,10 +37,13 @@ const createNew = async (req, res, next) => {
     // Validate dữ liệu hợp lệ thì mới cho request đi tiếp tới controller
     next()
   } catch (error) {
-    console.log(error)
-    res
-      .status(StatusCodes.UNPROCESSABLE_ENTITY)
-      .json({ errors: new Error(error).message })
+    const errorMessage = new Error(error).message // Lấy message lỗi khi validate
+    const customError = new ApiError(
+      StatusCodes.UNPROCESSABLE_ENTITY,
+      errorMessage
+    )
+    // Đưa về Middleware xử lý lỗi tập chung ở file Server.js
+    next(customError)
   }
 }
 
