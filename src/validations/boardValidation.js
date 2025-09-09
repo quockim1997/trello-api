@@ -25,19 +25,14 @@ const createNew = async (req, res, next) => {
   })
 
   try {
-    console.log('req.body:', req.body)
-
     // Sử dụng validateAsync kiểm tra dữ liệu từ phía FE gửi lên có đúng với hàm correctCondition đã khai báo hay không
     // abortEarly: flase sẽ cho phép trả về tất cả các trường bị lỗi
     // thay vì trả về từng trường , fix xong rồi trả về trường lỗi tiếp theo
     // docs: https://joi.dev/api/?v=17.13.3 (search 'abortEarly')
     await correctCondition.validateAsync(req.body, { abortEarly: false })
 
-    // next()
-
-    res
-      .status(StatusCodes.CREATED)
-      .json({ message: 'POST: APIs created new board' })
+    // Validate dữ liệu hợp lệ thì mới cho request đi tiếp tới controller
+    next()
   } catch (error) {
     console.log(error)
     res
