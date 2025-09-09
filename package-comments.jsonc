@@ -1,0 +1,39 @@
+{
+  "name": "nodejs-expressjs-mongodb-base-project",
+  "private": true,
+  "version": "1.0.0",
+  "author": "TrungQuanDev - Một Lập Trình Viên",
+  "description": "https://youtube.com/@trungquandev",
+  "engines": {
+    "node": ">=18.x"
+  },
+  "scripts": {
+    "lint": "eslint src --ext js --report-unused-disable-directives --max-warnings 0", // check code style bằng eslint
+    "clean": "rm -rf build && mkdir build", // xoá thư mục build và tạo lại
+    "build-babel": "babel ./src -d ./build/src", // transpile code src -> build bằng babel
+    "build": "npm run clean && npm run build-babel", // clean + build
+    "production": "npm run build && cross-env BUILD_MODE=production node ./build/src/server.js", // build và chạy ở chế độ production
+    "dev": "cross-env BUILD_MODE=dev nodemon --exec babel-node ./src/server.js" // chạy server dev + reload khi code thay đổi
+  },
+  "dependencies": {
+    "@babel/runtime": "^7.22.10", // Cung cấp các helper function của Babel (ví dụ: async/await, class, spread...) để tránh trùng lặp code khi build.
+    "async-exit-hook": "^2.0.1", // Cho phép lắng nghe và xử lý các sự kiện khi tiến trình Node.js thoát (vd: đóng DB connection, cleanup tài nguyên).
+    "cross-env": "^7.0.3", // Giúp set biến môi trường (NODE_ENV, BUILD_MODE...) chạy được cả trên Windows, Linux, macOS.
+    "dotenv": "^16.3.1", // Đọc file .env và load các biến môi trường vào process.env.
+    "express": "^4.18.2", // Framework web phổ biến cho Node.js, giúp tạo server HTTP, định nghĩa API route, middleware.
+    "http-status-codes": "^2.3.0", // Cung cấp constant cho các mã HTTP (vd: StatusCodes.OK, StatusCodes.BAD_REQUEST) thay vì dùng số 200, 400.
+    "joi": "^17.10.2", // Thư viện validate dữ liệu (validate body request, params, query...).
+    "mongodb": "^6.0.0" // Official driver của MongoDB cho Node.js, dùng để kết nối, CRUD database MongoDB.
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.22.10", // CLI tool cho Babel, dùng để build project bằng command line.
+    "@babel/core": "^7.22.10", // Core chính của Babel, làm nền cho việc transpile code ES6+ sang code chạy được trên Node.js.
+    "@babel/eslint-parser": "^7.22.10", // Cho phép ESLint hiểu code ES6+/JSX bằng Babel.
+    "@babel/node": "^7.22.10", // Thay thế node bằng babel-node để chạy code ES6+/import mà không cần build.
+    "@babel/plugin-transform-runtime": "^7.22.10", // Giúp Babel tái sử dụng code helper thay vì tạo nhiều bản copy → giảm size code build.
+    "@babel/preset-env": "^7.22.10", // Preset Babel phổ biến nhất, tự động chọn các transform cần thiết theo môi trường (Node version,browser).
+    "babel-plugin-module-resolver": "^5.0.0", // Cho phép định nghĩa alias khi import module (vd: ~/models/User thay vì ../../../models/User).
+    "eslint": "^8.47.0", // Công cụ check code style, bắt lỗi tiềm ẩn trong code JavaScript.
+    "nodemon": "^3.0.1" // Tự động restart server khi code thay đổi (chỉ dùng khi dev).
+  }
+}
