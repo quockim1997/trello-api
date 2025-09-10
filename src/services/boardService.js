@@ -18,14 +18,21 @@ const createNew = async (data) => {
     }
 
     // Gọi tới tầng Model để xử lý lưu bản ghi newBoard vào trong Database
-    // ...
+    const createdBoard = await boardModel.createNew(newBoard)
+    console.log(createdBoard)
+
+    // Vì MongoDB không trả về đầy đủ bản ghi mà chỉ trả về insertedId của mỗi bản ghi
+    // Nên ta phải dựa vào insertedId để chọc vào DB một lần nữa để lấy toàn bộ dữ liệu
+    // rồi mới trả về tầng Controller
+    const getNewBoard = await boardModel.findOneById(createdBoard.insertedId)
+    console.log(getNewBoard)
 
     // Làm thêm các xử lý logic khác với các Collection khác tùy đặc thù dự án, ...vv
     // Bắn email, notification về cho admin khi có 1 board được tạo, ...vv
 
-    // Trả kết quả về
+    // Trả kết quả về tầng Controller
     // Trong Service luôn phải có return
-    return newBoard
+    return getNewBoard
   } catch (error) {
     throw error
   }
