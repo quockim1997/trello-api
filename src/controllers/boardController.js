@@ -30,6 +30,24 @@ const createNew = async (req, res, next) => {
   }
 }
 
+const getDetails = async (req, res, next) => {
+  try {
+    // console.log('req.params:', req.params)
+    const boardId = req.params.id
+
+    // Điều hướng dữ liệu sang tầng Service
+    const board = await boardService.getDetails(boardId)
+
+    // Có kết quả thì trả về Client
+    res.status(StatusCodes.OK).json({ board })
+    // throw new ApiError(StatusCodes.BAD_GATEWAY, 'test error tầng controller')
+  } catch (error) {
+    // Khi sử dụng next thì sẽ đưa về Middleware để xử lý lỗi tập chung
+    next(error)
+  }
+}
+
 export const boardController = {
-  createNew
+  createNew,
+  getDetails
 }

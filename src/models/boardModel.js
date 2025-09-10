@@ -37,7 +37,7 @@ const validateBeforeCreate = async (data) => {
 // Hàm tạo mới một data mới
 const createNew = async (data) => {
   try {
-    // Lưu data đã validate vào 1 biến này và sử dụng biến này đưa vào phương thức insertOne để lưu vào DB
+    // Lưu data đã validate vào biến này và sử dụng biến này đưa vào phương thức insertOne để lưu vào DB
     const dataBeforeValidate = await validateBeforeCreate(data)
 
     // Thêm mới(insert) một document(data) vào collection(bảng) trong MongoDB.
@@ -53,6 +53,7 @@ const createNew = async (data) => {
 }
 
 // Hàm tìm data trong DB dựa vào insertedId trả về
+// Hàm này chỉ lấy ra board thôi
 const findOneById = async (id) => {
   try {
     // Thêm ObjectId của MongoDB vào để mặc định _id trả về sẽ luôn là ObjectId 
@@ -66,9 +67,26 @@ const findOneById = async (id) => {
   }
 }
 
+// Hàm lấy data theo id
+// Hàm này lấy ra Board, Column và Card khác với hàm findOneById ở trên
+// Query tổng hợp (aggregate) để lấy toàn bộ Column và Card thuộc về Board 
+const getDetails = async (boardId) => {
+  try {
+    // Thêm ObjectId của MongoDB vào để mặc định _id trả về sẽ luôn là ObjectId 
+    // vì MongoDB sẽ trả về _id là một ObjectId
+    const result = await GET_DB().collection(BOARD_COLLECTION_NAME).findOne({
+      _id: new ObjectId(String(boardId))
+    })
+    return result
+  } catch (error) {
+    throw new Error(error)
+  }
+}
+
 export const boardModel = {
   BOARD_COLLECTION_NAME,
   BOARD_COLLECTION_SCHEMA,
   createNew,
-  findOneById
+  findOneById,
+  getDetails
 }
