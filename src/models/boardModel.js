@@ -6,6 +6,7 @@
 
 // Thư viện ngoài
 import Joi from 'joi'
+import { ObjectId } from 'mongodb'
 
 // Local
 import { OBJECT_ID_RULE, OBJECT_ID_RULE_MESSAGE } from '~/utils/validators.js'
@@ -27,13 +28,22 @@ const BOARD_COLLECTION_SCHEMA = Joi.object({
   _destroy: Joi.boolean().default(false)
 })
 
-// Hàm tạo mới một dữ liệu mới
+// Hàm validate data 1 lần nữa trước khi lưu vào DB thông qua phương thức validateAsync
+// Nếu không validate 1 lần nữa thì sẽ nhận vào các data rác
+const validateBeforeCreate = async (data) => {
+  return await BOARD_COLLECTION_SCHEMA.validateAsync(data, { abortEarly: false })
+}
+
+// Hàm tạo mới một data mới
 const createNew = async (data) => {
   try {
+    // Lưu data đã validate vào 1 biến này và sử dụng biến này đưa vào phương thức insertOne để lưu vào DB
+    const dataBeforeValidate = await validateBeforeCreate(data)
+
     // Thêm mới(insert) một document(data) vào collection(bảng) trong MongoDB.
     const createdBoard = await GET_DB()
       .collection(BOARD_COLLECTION_NAME)
-      .insertOne(data)
+      .insertOne(dataBeforeValidate)
 
     // Trả kết quả về tầng Service
     return createdBoard
@@ -42,11 +52,13 @@ const createNew = async (data) => {
   }
 }
 
-// Hàm tìm dữ liệu trong DB dựa vào insertedId trả về
+// Hàm tìm data trong DB dựa vào insertedId trả về
 const findOneById = async (id) => {
   try {
+    // Thêm ObjectId của MongoDB vào để mặc định _id trả về sẽ luôn là ObjectId 
+    // vì MongoDB sẽ trả về _id là một ObjectId
     const result = await GET_DB().collection(BOARD_COLLECTION_NAME).findOne({
-      _id: id
+      _id: new ObjectId(String(id))
     })
     return result
   } catch (error) {
