@@ -9,6 +9,8 @@
 // Local
 import { slugify } from '~/utils/formatters.js'
 import { boardModel } from '~/models/boardModel.js'
+import ApiError from '~/utils/ApiError.js'
+import { StatusCodes } from 'http-status-codes'
 
 const createNew = async (data) => {
   try {
@@ -38,6 +40,23 @@ const createNew = async (data) => {
   }
 }
 
+const getDetails = async (boardId) => {
+  try {
+    // Gọi tới tầng Model để xử lý lấy bản ghi trong DB ra
+    const board = await boardModel.getDetails(boardId)
+
+    if (!board) {
+      throw new ApiError(StatusCodes.NOT_FOUND, 'Board not found')
+    }
+    // Trả kết quả về tầng Controller
+    // Trong Service luôn phải có return
+    return board
+  } catch (error) {
+    throw error
+  }
+}
+
 export const boardService = {
-  createNew
+  createNew,
+  getDetails
 }
