@@ -8,6 +8,7 @@
 
 // Local
 import { slugify } from '~/utils/formatters.js'
+import { boardModel } from '~/models/boardModel.js'
 
 const createNew = async (data) => {
   try {
