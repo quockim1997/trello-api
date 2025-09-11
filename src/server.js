@@ -8,6 +8,8 @@
 // Thư mục ngoài
 import express from 'express'
 import exitHook from 'async-exit-hook'
+import cors from 'cors'
+import { corsOptions } from './config/cors.js'
 
 // Local
 import { CONNECT_DB, CLOSE_DB } from '~/config/mongodb'
@@ -17,6 +19,10 @@ import { errorHandlingMiddleware } from './middlewares/errorHandlingMiddleware.j
 
 const START_SERVER = () => {
   const app = express()
+
+  // Thêm thư viện cors vào để khắc phục lỗi CORS huyền thoại
+  // Truyền thêm hàm corsOptions để chỉ định những domain nào có thể truy cập được tài nguyên của server
+  app.use(cors(corsOptions))
 
   // Cho phép gửi dữ liệu json data
   app.use(express.json())
