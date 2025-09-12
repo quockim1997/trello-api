@@ -115,7 +115,7 @@ const getDetails = async (boardId) => {
       ])
       .toArray() // phải có toArray() để lấy ra đúng kết quả mong muốn
     console.log(result)
-    return result[0] || {}
+    return result[0] || null
   } catch (error) {
     throw new Error(error)
   }
