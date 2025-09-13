@@ -80,13 +80,6 @@ const findOneById = async (id) => {
 // Query tổng hợp (aggregate) để lấy toàn bộ Column và Card thuộc về Board
 const getDetails = async (boardId) => {
   try {
-    // Thêm ObjectId của MongoDB vào để mặc định _id trả về sẽ luôn là ObjectId
-    // vì MongoDB sẽ trả về _id là một ObjectId
-    // const result = await GET_DB()
-    //   .collection(BOARD_COLLECTION_NAME)
-    //   .findOne({
-    //     _id: new ObjectId(String(boardId))
-    //   })
     const result = await GET_DB()
       .collection(BOARD_COLLECTION_NAME)
       .aggregate([
@@ -121,10 +114,28 @@ const getDetails = async (boardId) => {
   }
 }
 
+// Hàm thêm columnId vào cuối mảng columnOrderIds trong bảng board
+const pushColumnOrderIds = async (column) => {
+  try {
+    const result = await GET_DB()
+      .collection(BOARD_COLLECTION_NAME)
+      .findOneAndUpdate(
+        // phương thức này có trong mondoDB
+        { _id: new ObjectId(String(column.boardId)) },
+        { $push: { columnOrderIds: new ObjectId(String(column._id)) } }, // doc: https://www.mongodb.com/docs/manual/reference/operator/update/push/
+        { returnDocument: 'after' } // Muốn trả về bản ghi sau khi đã findOneAndUpdate thì phải có phương thức returnDocument = false
+      )
+    return result.value
+  } catch (error) {
+    throw new Error(error)
+  }
+}
+
 export const boardModel = {
   BOARD_COLLECTION_NAME,
   BOARD_COLLECTION_SCHEMA,
   createNew,
   findOneById,
-  getDetails
+  getDetails,
+  pushColumnOrderIds
 }
