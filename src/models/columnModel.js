@@ -93,7 +93,7 @@ const pushCardOrderIds = async (card) => {
         { $push: { cardOrderIds: new ObjectId(String(card._id)) } }, // doc: https://www.mongodb.com/docs/manual/reference/operator/update/push/
         { returnDocument: 'after' } // Muốn trả về bản ghi sau khi đã findOneAndUpdate thì phải có phương thức returnDocument = false
       )
-    return result.value
+    return result
   } catch (error) {
     throw new Error(error)
   }

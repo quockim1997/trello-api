@@ -21,6 +21,8 @@ Router.route('/')
   // boardValidation validate ok rồi thì mới chạy tới boardController thông qua next() trong boardValidation
   .post(boardValidation.createNew, boardController.createNew)
 
-Router.route('/:id').get(boardController.getDetails).put()
+Router.route('/:id')
+  .get(boardController.getDetails)
+  .put(boardValidation.updateData, boardController.updateData)
 
 export const boardRoute = Router

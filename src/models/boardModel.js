@@ -32,6 +32,9 @@ const BOARD_COLLECTION_SCHEMA = Joi.object({
   _destroy: Joi.boolean().default(false)
 })
 
+// Chỉ định ra những field mà chúng ta không muốn cho phép cập nhật trong hàm updateData()
+const INVALID_UPDATE_FIELDS = ['_id', 'createdAt']
+
 // Hàm validate data 1 lần nữa trước khi lưu vào DB thông qua phương thức validateAsync
 // Nếu không validate 1 lần nữa thì sẽ nhận vào các data rác
 const validateBeforeCreate = async (data) => {
@@ -125,7 +128,31 @@ const pushColumnOrderIds = async (column) => {
         { $push: { columnOrderIds: new ObjectId(String(column._id)) } }, // doc: https://www.mongodb.com/docs/manual/reference/operator/update/push/
         { returnDocument: 'after' } // Muốn trả về bản ghi sau khi đã findOneAndUpdate thì phải có phương thức returnDocument = false
       )
-    return result.value
+    return result
+  } catch (error) {
+    throw new Error(error)
+  }
+}
+
+const updateData = async (boardId, data) => {
+  try {
+    // Xóa đi các trường không muốn cập nhật:
+    // VD: _id, createdAt, ...vv
+    Object.keys(data).forEach(fieldName => {
+      if (INVALID_UPDATE_FIELDS.includes(fieldName)) {
+        delete data[fieldName]
+      }
+    })
+
+    const result = await GET_DB()
+      .collection(BOARD_COLLECTION_NAME)
+      .findOneAndUpdate(
+        // phương thức này có trong mondoDB
+        { _id: new ObjectId(String(boardId)) },
+        { $set: data }, // doc: https://www.mongodb.com/docs/manual/reference/operator/update/push/
+        { returnDocument: 'after' } // Muốn trả về bản ghi sau khi đã findOneAndUpdate thì phải có phương thức returnDocument = false
+      )
+    return result
   } catch (error) {
     throw new Error(error)
   }
@@ -137,5 +164,6 @@ export const boardModel = {
   createNew,
   findOneById,
   getDetails,
-  pushColumnOrderIds
+  pushColumnOrderIds,
+  updateData
 }
