@@ -22,7 +22,7 @@ const createNew = async (req, res, next) => {
     const createdBoard = await boardService.createNew(req.body)
 
     // Có kết quả thì trả về Client
-    res.status(StatusCodes.CREATED).json({ createdBoard })
+    res.status(StatusCodes.CREATED).json(createdBoard)
     // throw new ApiError(StatusCodes.BAD_GATEWAY, 'test error tầng controller')
   } catch (error) {
     // Khi sử dụng next thì sẽ đưa về Middleware để xử lý lỗi tập chung
