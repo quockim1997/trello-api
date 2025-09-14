@@ -25,6 +25,25 @@ const createNew = async (req, res, next) => {
   }
 }
 
+const updateData = async (req, res, next) => {
+  try {
+    // console.log('req.params:', req.params)
+    const columnId = req.params.id
+
+    // Điều hướng dữ liệu sang tầng Service
+    const updatedColumn = await columnService.updateData(columnId, req.body)
+
+    // Có kết quả thì trả về Client
+    res.status(StatusCodes.OK).json(updatedColumn)
+    // throw new ApiError(StatusCodes.BAD_GATEWAY, 'test error tầng controller')
+  } catch (error) {
+    // Khi sử dụng next thì sẽ đưa về Middleware để xử lý lỗi tập chung
+    next(error)
+  }
+}
+
+
 export const columnController = {
-  createNew
+  createNew,
+  updateData
 }
