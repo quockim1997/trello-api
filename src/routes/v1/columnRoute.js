@@ -17,4 +17,7 @@ Router.route('/')
   // columnValidation validate ok rồi thì mới chạy tới columnController thông qua next() trong columnValidation
   .post(columnValidation.createNew, columnController.createNew)
 
+Router.route('/:id')
+  .put(columnValidation.updateData, columnController.updateData)
+
 export const columnRoute = Router

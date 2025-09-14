@@ -89,11 +89,11 @@ const updateData = async (boardId, reqBody) => {
       updatedAt: Date.now()
     }
     // Gọi tới tầng Model để xử lý lấy bản ghi trong DB ra
-    const updatedData = await boardModel.updateData(boardId, data)
+    const updatedBoard = await boardModel.updateData(boardId, data)
 
     // Trả kết quả về tầng Controller
     // Trong Service luôn phải có return
-    return updatedData
+    return updatedBoard
   } catch (error) {
     throw error
   }

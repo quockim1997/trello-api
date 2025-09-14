@@ -32,6 +32,9 @@ const COLUMN_COLLECTION_SCHEMA = Joi.object({
   _destroy: Joi.boolean().default(false)
 })
 
+// Chỉ định ra những field mà chúng ta không muốn cho phép cập nhật trong hàm updateData()
+const INVALID_UPDATE_FIELDS = ['_id', 'boardId', 'createdAt']
+
 // Hàm validate data 1 lần nữa trước khi lưu vào DB thông qua phương thức validateAsync
 // Nếu không validate 1 lần nữa thì sẽ nhận vào các data rác
 const validateBeforeCreate = async (data) => {
@@ -99,10 +102,36 @@ const pushCardOrderIds = async (card) => {
   }
 }
 
+const updateData = async (columnId, data) => {
+  try {
+    // Xóa đi các trường không muốn cập nhật:
+    // VD: _id, createdAt, ...vv
+    Object.keys(data).forEach(fieldName => {
+      if (INVALID_UPDATE_FIELDS.includes(fieldName)) {
+        delete data[fieldName]
+      }
+    })
+
+    const result = await GET_DB()
+      .collection(COLUMN_COLLECTION_NAME)
+      .findOneAndUpdate(
+        // phương thức này có trong mondoDB
+        { _id: new ObjectId(String(columnId)) },
+        { $set: data }, // doc: https://www.mongodb.com/docs/manual/reference/operator/update/push/
+        { returnDocument: 'after' } // Muốn trả về bản ghi sau khi đã findOneAndUpdate thì phải có phương thức returnDocument = false
+      )
+    return result
+  } catch (error) {
+    throw new Error(error)
+  }
+}
+
+
 export const columnModel = {
   COLUMN_COLLECTION_NAME,
   COLUMN_COLLECTION_SCHEMA,
   createNew,
   findOneById,
-  pushCardOrderIds
+  pushCardOrderIds,
+  updateData
 }
