@@ -70,14 +70,14 @@ const createNew = async (data) => {
 
 // Hàm tìm data trong DB dựa vào insertedId trả về
 // Hàm này chỉ lấy ra column thôi
-const findOneById = async (id) => {
+const findOneById = async (columnId) => {
   try {
     // Thêm ObjectId của MongoDB vào để mặc định _id trả về sẽ luôn là ObjectId
     // vì MongoDB sẽ trả về _id là một ObjectId
     const result = await GET_DB()
       .collection(COLUMN_COLLECTION_NAME)
       .findOne({
-        _id: new ObjectId(String(id))
+        _id: new ObjectId(String(columnId))
       })
     return result
   } catch (error) {
@@ -131,6 +131,20 @@ const updateData = async (columnId, data) => {
   }
 }
 
+const deleteOneById = async (columnId) => {
+  try {
+    // Thêm ObjectId của MongoDB vào để mặc định _id trả về sẽ luôn là ObjectId
+    // vì MongoDB sẽ trả về _id là một ObjectId
+    const result = await GET_DB()
+      .collection(COLUMN_COLLECTION_NAME)
+      .deleteOne({
+        _id: new ObjectId(String(columnId))
+      }) // Sử dụng hàm deleteOne trong MongoDB . Doc: https://www.mongodb.com/docs/drivers/node/current/crud/delete/
+    return result
+  } catch (error) {
+    throw new Error(error)
+  }
+}
 
 export const columnModel = {
   COLUMN_COLLECTION_NAME,
@@ -138,5 +152,6 @@ export const columnModel = {
   createNew,
   findOneById,
   pushCardOrderIds,
-  updateData
+  updateData,
+  deleteOneById
 }

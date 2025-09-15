@@ -115,10 +115,26 @@ const updateData = async (cardId, data) => {
   }
 }
 
+const deleteManyByColumnId = async (columnId) => {
+  try {
+    // Thêm ObjectId của MongoDB vào để mặc định _id trả về sẽ luôn là ObjectId
+    // vì MongoDB sẽ trả về _id là một ObjectId
+    const result = await GET_DB()
+      .collection(CARD_COLLECTION_NAME)
+      .deleteMany({
+        columnId: new ObjectId(String(columnId))
+      })
+    return result
+  } catch (error) {
+    throw new Error(error)
+  }
+}
+
 export const cardModel = {
   CARD_COLLECTION_NAME,
   CARD_COLLECTION_SCHEMA,
   createNew,
   findOneById,
-  updateData
+  updateData,
+  deleteManyByColumnId
 }

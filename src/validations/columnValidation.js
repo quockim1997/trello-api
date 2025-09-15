@@ -94,7 +94,40 @@ const updateData = async (req, res, next) => {
   }
 }
 
+const deleteData = async (req, res, next) => {
+  /**
+   * Note: Mặc định chúng ta không cần phải custom message ở phía BE làm gì
+   * vì để cho FE tự validate và custom message ở phía FE cho đẹp
+   * BE chỉ cần validate đảm bảo dữ liệu chính xác, và trả về message mặc định từ thư viện là được
+   * Quan trọng việc validate dữ liệu BẮT BUỘC phải có ở phía BE vì đây là điểm cuối để lưu trữ dữ liệu vào DB
+   * Và thông thường trong thực tế, điều tốt nhất cho hệ thống là hãy luôn validate dữ liệu ở cả BE và FE
+   */
+
+  // Tạo biến điều kiện đúng
+  const correctCondition = Joi.object({
+    id: Joi.string().required().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE)
+  })
+
+  try {
+    // Sử dụng validateAsync kiểm tra dữ liệu từ phía FE gửi lên có đúng với hàm correctCondition đã khai báo hay không
+    // docs: https://joi.dev/api/?v=17.13.3 (search 'abortEarly')
+    await correctCondition.validateAsync(req.params)
+
+    // Validate dữ liệu hợp lệ thì mới cho request đi tiếp tới controller
+    next()
+  } catch (error) {
+    const errorMessage = new Error(error).message // Lấy message lỗi khi validate
+    const customError = new ApiError(
+      StatusCodes.UNPROCESSABLE_ENTITY,
+      errorMessage
+    )
+    // Đưa về Middleware xử lý lỗi tập chung ở file Server.js
+    next(customError)
+  }
+}
+
 export const columnValidation = {
   createNew,
-  updateData
+  updateData,
+  deleteData
 }

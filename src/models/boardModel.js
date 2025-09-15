@@ -63,14 +63,14 @@ const createNew = async (data) => {
 
 // Hàm tìm data trong DB dựa vào insertedId trả về
 // Hàm này chỉ lấy ra board thôi
-const findOneById = async (id) => {
+const findOneById = async (boardId) => {
   try {
     // Thêm ObjectId của MongoDB vào để mặc định _id trả về sẽ luôn là ObjectId
     // vì MongoDB sẽ trả về _id là một ObjectId
     const result = await GET_DB()
       .collection(BOARD_COLLECTION_NAME)
       .findOne({
-        _id: new ObjectId(String(id))
+        _id: new ObjectId(String(boardId))
       })
     return result
   } catch (error) {
@@ -110,7 +110,6 @@ const getDetails = async (boardId) => {
         }
       ])
       .toArray() // phải có toArray() để lấy ra đúng kết quả mong muốn
-    console.log(result)
     return result[0] || null
   } catch (error) {
     throw new Error(error)
@@ -118,6 +117,7 @@ const getDetails = async (boardId) => {
 }
 
 // Hàm thêm columnId vào cuối mảng columnOrderIds trong bảng board
+// Dùng $push trong MongoDB trong trường hợp này để đẩy một phần tử vào cuối mảng
 const pushColumnOrderIds = async (column) => {
   try {
     const result = await GET_DB()
@@ -126,6 +126,24 @@ const pushColumnOrderIds = async (column) => {
         // phương thức này có trong mondoDB
         { _id: new ObjectId(String(column.boardId)) },
         { $push: { columnOrderIds: new ObjectId(String(column._id)) } }, // doc: https://www.mongodb.com/docs/manual/reference/operator/update/push/
+        { returnDocument: 'after' } // Muốn trả về bản ghi sau khi đã findOneAndUpdate thì phải có phương thức returnDocument = false
+      )
+    return result
+  } catch (error) {
+    throw new Error(error)
+  }
+}
+
+// Hàm lấy một phần tử columnId ra khỏi mảng columnOrderIds
+// Dùng $pull trong MongoDB trong trường hợp này để lấy một phần tử ra khỏi mảng rồi xóa nó đi
+const pullColumnOrderIds = async (column) => {
+  try {
+    const result = await GET_DB()
+      .collection(BOARD_COLLECTION_NAME)
+      .findOneAndUpdate(
+        // phương thức này có trong mondoDB
+        { _id: new ObjectId(String(column.boardId)) },
+        { $pull: { columnOrderIds: new ObjectId(String(column._id)) } }, // doc: https://www.mongodb.com/docs/manual/reference/operator/update/pull/
         { returnDocument: 'after' } // Muốn trả về bản ghi sau khi đã findOneAndUpdate thì phải có phương thức returnDocument = false
       )
     return result
@@ -170,5 +188,6 @@ export const boardModel = {
   findOneById,
   getDetails,
   pushColumnOrderIds,
-  updateData
+  updateData,
+  pullColumnOrderIds
 }
