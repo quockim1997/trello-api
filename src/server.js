@@ -33,12 +33,26 @@ const START_SERVER = () => {
   // Middleware xử lý lỗi tập chung
   app.use(errorHandlingMiddleware)
 
-  app.listen(env.APP_PORT, env.APP_HOST, () => {
-    // eslint-disable-next-line no-console
-    console.log(
-      `Hello ${env.AUTHOR}, I am running at http://${env.APP_HOST}:${env.APP_PORT}/`
-    )
-  })
+  // Môi trường Production (cụ thể hiện tại đang deploy trên render.com)
+  if (env.BUILD_MODE === 'production') {
+    // Khi deploy lên thì render.com sẽ tự động render ra cho một PORT ngẫu nhiên
+    app.listen(process.env.PORT, () => {
+      // eslint-disable-next-line no-console
+      console.log(
+        `Production: Hello ${env.AUTHOR}, BE Server is running successfully running at PORT: ${process.env.PORT}`
+      )
+    })
+  } else {
+    // Môi trường Local
+    app.listen(env.APP_PORT, env.LOCAL_DEV_APP_HOST, () => {
+      // eslint-disable-next-line no-console
+      console.log(
+        `Local: Hello ${env.AUTHOR}, BE Server is running successfully running at HOST: ${env.LOCAL_DEV_APP_HOST} and PORT: ${env.APP_PORT}`
+      )
+    })
+
+  }
+
 
   // Thực hiện các tác vụ cleanup trước khi dừng server lại
   exitHook(() => {
