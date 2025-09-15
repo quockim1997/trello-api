@@ -14,6 +14,7 @@ export const corsOptions = {
   origin: function (origin, callback) {
     // Nếu là môi trường local dev thì cho qua luôn
     if (env.BUILD_MODE === 'dev') {
+      // callback(error, allowOrigin) => error: không có lỗi và allowOrigin: origin này được phép
       return callback(null, true)
     }
 
