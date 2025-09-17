@@ -44,10 +44,10 @@ const START_SERVER = () => {
     })
   } else {
     // Môi trường Local
-    app.listen(env.APP_PORT, env.LOCAL_DEV_APP_HOST, () => {
+    app.listen(env.LOCAL_DEV_APP_PORT, env.LOCAL_DEV_APP_HOST, () => {
       // eslint-disable-next-line no-console
       console.log(
-        `Local: Hello ${env.AUTHOR}, BE Server is running successfully running at HOST: ${env.LOCAL_DEV_APP_HOST} and PORT: ${env.APP_PORT}`
+        `Local: Hello ${env.AUTHOR}, BE Server is running successfully running at HOST: ${env.LOCAL_DEV_APP_HOST} and PORT: ${env.LOCAL_DEV_APP_PORT}`
       )
     })
 
