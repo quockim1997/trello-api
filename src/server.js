@@ -10,6 +10,7 @@ import express from 'express'
 import exitHook from 'async-exit-hook'
 import cors from 'cors'
 import { corsOptions } from './config/cors.js'
+import cookieParser from 'cookie-parser' // https://www.npmjs.com/package/cookie-parser
 
 // Local
 import { CONNECT_DB, CLOSE_DB } from '~/config/mongodb'
@@ -19,6 +20,16 @@ import { errorHandlingMiddleware } from './middlewares/errorHandlingMiddleware.j
 
 const START_SERVER = () => {
   const app = express()
+
+  // Fix lỗi Cache from disk của ExpressJS
+  // https://stackoverflow.com/a/53240717/8324172
+  app.use((req, res, next) => {
+    res.set('Cache-Control', 'no-store')
+    next()
+  })
+
+  // Cấu hình Cookie Parser
+  app.use(cookieParser())
 
   // Thêm thư viện cors vào để khắc phục lỗi CORS huyền thoại
   // Truyền thêm hàm corsOptions để chỉ định những domain nào có thể truy cập được tài nguyên của server
