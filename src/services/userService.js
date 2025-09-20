@@ -4,6 +4,8 @@ import ApiError from '~/utils/ApiError'
 import { pickUser } from '~/utils/formatters.js'
 import { WEBSITE_DOMAIN } from '~/utils/constants.js'
 import { BrevoProvider } from '~/providers/BrevoProvider.js'
+import { env } from '~/config/environment.js'
+import { JwtProvider } from '~/providers/JwtProvider.js'
 
 /* Library */
 import { StatusCodes } from 'http-status-codes'
@@ -63,6 +65,95 @@ const createNew = async (reqBody) => {
   }
 }
 
+const verifyAccount = async (reqBody) => {
+  try {
+    /** B1: Kiểm tra user đã tồn tại trong DB chưa thông qua kiểm tra email */
+    const existUser = await userModel.findOneByEmail(reqBody.email)
+
+    /** B2: Các bước kiểm tra cần thiết */
+    // B2.1: Kiểm tra tài khoản này có tồn tại trong DB hay chưa
+    if (!existUser) {
+      throw new ApiError(StatusCodes.NOT_FOUND, 'Account not found!')
+    }
+    // B2.2: Kiểm tra tài khoản này có active hay chưa
+    if (existUser.isActive) {
+      throw new ApiError(StatusCodes.NOT_ACCEPTABLE, 'Your account is already active!')
+    }
+    // B2.3: Kiểm tra token có đúng hay chưa
+    if (reqBody.token !== existUser.verifyToken) {
+      throw new ApiError(StatusCodes.NOT_ACCEPTABLE, 'Token in valid!')
+    }
+
+    /** B3: Nếu như mọi thứ oke thì bắt đầu update lại thông tin user để verify account */
+    const updateData = {
+      isActive: true,
+      verifyToken: null
+    }
+    const updatedUser = await userModel.updateData(existUser._id, updateData)
+
+    /** B4: Trả về dữ liệu cho phía controller */
+    // Sử dụng pickUser của file formatters.js để lấy một vài dữ liệu cụ thể trong User
+    // để tránh việc trả về các dữ liệu nhạy cảm như hash password
+    return pickUser(updatedUser)
+
+  } catch (error) {
+    throw error
+  }
+}
+
+const login = async (reqBody) => {
+  try {
+    /** B1: Kiểm tra user đã tồn tại trong DB chưa thông qua kiểm tra email */
+    const existUser = await userModel.findOneByEmail(reqBody.email)
+
+    /** B2: Các bước kiểm tra cần thiết */
+    // B2.1: Kiểm tra tài khoản này có tồn tại trong DB hay chưa
+    if (!existUser) {
+      throw new ApiError(StatusCodes.NOT_FOUND, 'Account not found!')
+    }
+    // B2.2: Kiểm tra tài khoản này có active hay chưa
+    if (!existUser.isActive) {
+      throw new ApiError(StatusCodes.NOT_ACCEPTABLE, 'Your account is not active!')
+    }
+
+    // B2.3: Kiểm tra password thông qua thằng compareSync
+    // reqBody.password(từ phía FE gửi lên thông qua ô input mà người dùng nhập) sẽ so sánh vơi
+    // existUser.password(password đã băm và lưu trong DB)
+    if (!bcrypt.compareSync(reqBody.password, existUser.password)) {
+      throw new ApiError(StatusCodes.NOT_ACCEPTABLE, 'Your Email or Password is incorrect!')
+    }
+
+    /** B3: Nếu mọi thứ ok thì bắt đầu tạo Tokens đăng nhập để trả về cho phía FE */
+    // B3.1: Tạo thông tin để đính kèm trong JWT Token: bao gồm _id và email của user
+    const userInfo = { _id: existUser._id, email: existUser.email }
+
+    // B3.2: Tạo ra 2 loại token: accessToken và refreshToken để trả về cho phía FE
+    const accessToken = await JwtProvider.generateToken(
+      userInfo,
+      env.ACCESS_TOKEN_SECRET_SIGNATURE,
+      env.ACCESS_TOKEN_LIFE
+    )
+
+    const refreshToken = await JwtProvider.generateToken(
+      userInfo,
+      env.REFRESH_TOKEN_SECRET_SIGNATURE,
+      env.REFRESH_TOKEN_LIFE
+    )
+
+    console.log('accessToken: ', accessToken)
+    console.log('refreshToken: ', refreshToken)
+
+    // B3.3: Trả về thông tin của user kèm theo 2 cái token vừa tạo ra
+    return { accessToken, refreshToken, ...pickUser(existUser) }
+
+  } catch (error) {
+    throw error
+  }
+}
+
+
 export const userService = {
-  createNew
+  createNew,
+  verifyAccount,
+  login
 }

@@ -41,6 +41,63 @@ const createNew = async (req, res, next) => {
   }
 }
 
+const verifyAccount = async (req, res, next) => {
+  // Tạo biến điều kiện đúng
+  const correctCondition = Joi.object({
+    email: Joi.string().required().pattern(EMAIL_RULE).message(EMAIL_RULE_MESSAGE),
+    token: Joi.string().required()
+  })
+
+  try {
+    // Sử dụng validateAsync kiểm tra dữ liệu từ phía FE gửi lên có đúng với hàm correctCondition đã khai báo hay không
+    // abortEarly: flase sẽ cho phép trả về tất cả các trường bị lỗi
+    // thay vì trả về từng trường , fix xong rồi trả về trường lỗi tiếp theo
+    // docs: https://joi.dev/api/?v=17.13.3 (search 'abortEarly')
+    await correctCondition.validateAsync(req.body, { abortEarly: false })
+
+    // Validate dữ liệu hợp lệ thì mới cho request đi tiếp tới controller
+    next()
+  } catch (error) {
+    const errorMessage = new Error(error).message // Lấy message lỗi khi validate
+    const customError = new ApiError(
+      StatusCodes.UNPROCESSABLE_ENTITY,
+      errorMessage
+    )
+    // Đưa về Middleware xử lý lỗi tập chung ở file Server.js
+    next(customError)
+  }
+}
+
+const login = async (req, res, next) => {
+  // Tạo biến điều kiện đúng
+  const correctCondition = Joi.object({
+    email: Joi.string().required().pattern(EMAIL_RULE).message(EMAIL_RULE_MESSAGE),
+    password: Joi.string().required().pattern(PASSWORD_RULE).message(PASSWORD_RULE_MESSAGE)
+  })
+
+  try {
+    // Sử dụng validateAsync kiểm tra dữ liệu từ phía FE gửi lên có đúng với hàm correctCondition đã khai báo hay không
+    // abortEarly: flase sẽ cho phép trả về tất cả các trường bị lỗi
+    // thay vì trả về từng trường , fix xong rồi trả về trường lỗi tiếp theo
+    // docs: https://joi.dev/api/?v=17.13.3 (search 'abortEarly')
+    await correctCondition.validateAsync(req.body, { abortEarly: false })
+
+    // Validate dữ liệu hợp lệ thì mới cho request đi tiếp tới controller
+    next()
+  } catch (error) {
+    const errorMessage = new Error(error).message // Lấy message lỗi khi validate
+    const customError = new ApiError(
+      StatusCodes.UNPROCESSABLE_ENTITY,
+      errorMessage
+    )
+    // Đưa về Middleware xử lý lỗi tập chung ở file Server.js
+    next(customError)
+  }
+}
+
+
 export const userValidation = {
-  createNew
+  createNew,
+  verifyAccount,
+  login
 }
