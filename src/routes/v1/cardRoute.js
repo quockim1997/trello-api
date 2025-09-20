@@ -9,12 +9,14 @@ import express from 'express'
 
 // Local
 import { cardValidation } from '~/validations/cardValidation.js'
-import { cardController } from '~/controllers/cardController'
+import { cardController } from '~/controllers/cardController.js'
+import { authMiddleware } from '~/middlewares/authMiddleware.js'
 
 const Router = express.Router()
 
+// Trước khi chạy vào tầng Validation và Controller thì phải chạy qua tầng Middleware
 Router.route('/')
   // cardValidation validate ok rồi thì mới chạy tới cardController thông qua next() trong cardValidation
-  .post(cardValidation.createNew, cardController.createNew)
+  .post(authMiddleware.isAuthorized, cardValidation.createNew, cardController.createNew)
 
 export const cardRoute = Router

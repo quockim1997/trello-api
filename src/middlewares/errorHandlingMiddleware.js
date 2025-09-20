@@ -25,7 +25,7 @@ export const errorHandlingMiddleware = (err, req, res, next) => {
     message: err.message || StatusCodes[err.statusCode], // Nếu lỗi mà không có message thì lấy ReasonPhrases chuẩn theo mã Status Code
     stack: err.stack // Dùng để thu hẹp phạm vi phát sinh lỗi giúp dev dễ tra ra lỗi hơn
   }
-//   console.error(responseError)
+  // console.error(responseError)
 
   // Chỉ khi môi trường là DEV thì mới trả về Stack Trace để debug dễ dàng hơn, còn không thì xóa đi.
   // (Muốn hiểu rõ hơn hãy xem video 55 trong bộ MERN Stack trên kênh Youtube: https://www.youtube.com/@trungquandev)
