@@ -1,6 +1,6 @@
 /* Local */
 import { userService } from '~/services/userService.js'
-import ApiError from '~/utils/ApiError'
+import ApiError from '~/utils/ApiError.js'
 
 /* Library */
 import { StatusCodes } from 'http-status-codes'
@@ -100,7 +100,10 @@ const update = async (req, res, next) => {
     // thông qua jwtDecoded (tự định nghĩa bên file authMiddleware),
     // từ đó ta lấy được _id gán vào biến userId.
     const userId = req.jwtDecoded._id
-    const updatedUser = await userService.update(userId, req.body)
+    const userAvatarFile = req.file
+    // console.log('Controller > userAvatarFile: ', userAvatarFile)
+
+    const updatedUser = await userService.update(userId, req.body, userAvatarFile)
     res.status(StatusCodes.OK).json(updatedUser)
   } catch (error) {
     next(error)

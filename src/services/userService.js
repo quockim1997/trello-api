@@ -4,6 +4,7 @@ import ApiError from '~/utils/ApiError'
 import { pickUser } from '~/utils/formatters.js'
 import { WEBSITE_DOMAIN } from '~/utils/constants.js'
 import { BrevoProvider } from '~/providers/BrevoProvider.js'
+import { CloudinaryProvider } from '~/providers/CloudinaryProvider.js'
 import { env } from '~/config/environment.js'
 import { JwtProvider } from '~/providers/JwtProvider.js'
 
@@ -179,7 +180,7 @@ const refreshToken = async (clientRefreshToken) => {
   } catch (error) {throw error}
 }
 
-const update = async (userId, reqBody) => {
+const update = async (userId, reqBody, userAvatarFile) => {
   try {
     // Query User và kiếm tra cho chắc chắn
     const existUser = await userModel.findOneById(userId)
@@ -198,6 +199,17 @@ const update = async (userId, reqBody) => {
       // Nếu như current_password đúng thì chúng ta sẽ hash một mật khẩu mới và update lại vào DB
       updatedUser = await userModel.update(existUser._id, {
         password: bcrypt.hashSync(reqBody.new_password, 8)
+      })
+    } else if (userAvatarFile) {
+      //  Trường hợp upload file lên Clound Storage, cụ thể là Cloudinary
+      // Chỉ truyền lên buffer
+      // console.log(userAvatarFile)
+      const uploadResult = await CloudinaryProvider.streamUpload(userAvatarFile.buffer, 'users')
+      console.log('uploadResult: ', uploadResult)
+
+      // Lưu lại url của file ảnh vào trong DB
+      updatedUser = await userModel.update(existUser._id, {
+        avatar: uploadResult.secure_url
       })
     } else {
       // Trường hợp update các thông tin chung, ví dụ: displayName
