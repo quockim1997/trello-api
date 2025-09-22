@@ -95,9 +95,33 @@ const login = async (req, res, next) => {
   }
 }
 
+const update = async (req, res, next) => {
+  // Tạo biến điều kiện đúng
+  const correctCondition = Joi.object({
+    displayName: Joi.string().trim().strict(),
+    current_password: Joi.string().required().pattern(PASSWORD_RULE).message(`current_password: ${PASSWORD_RULE_MESSAGE}`),
+    new_password: Joi.string().required().pattern(PASSWORD_RULE).message(`new_password: ${PASSWORD_RULE_MESSAGE}`)
+  })
+
+  try {
+    // Sử dụng validateAsync kiểm tra dữ liệu từ phía FE gửi lên có đúng với hàm correctCondition đã khai báo hay không
+    // abortEarly: flase sẽ cho phép trả về tất cả các trường bị lỗi
+    // thay vì trả về từng trường , fix xong rồi trả về trường lỗi tiếp theo
+    // docs: https://joi.dev/api/?v=17.13.3 (search 'abortEarly')
+    // Lưu ý: với trường hợp update, cho phép Unknown để không cần đẩy một số field lên
+    await correctCondition.validateAsync(res.body, { abortEarly: false, allowUnknown: true })
+
+    // Validate dữ liệu hợp lệ thì mới cho request đi tiếp tới controller
+    next()
+  } catch (error) {
+    next(new ApiError(StatusCodes.UNPROCESSABLE_ENTITY, new Error(error).message))
+  }
+}
+
 
 export const userValidation = {
   createNew,
   verifyAccount,
-  login
+  login,
+  update
 }
