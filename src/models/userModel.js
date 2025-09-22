@@ -40,7 +40,7 @@ const USER_COLLECTION_SCHEMA = Joi.object({
   _destroy: Joi.boolean().default(false)
 })
 
-// Chỉ định ra những field mà chúng ta không muốn cho phép cập nhật trong hàm updateData()
+// Chỉ định ra những field mà chúng ta không muốn cho phép cập nhật trong hàm update()
 const INVALID_UPDATE_FIELDS = ['_id', 'email', 'username', 'createdAt']
 
 // Hàm validate data 1 lần nữa trước khi lưu vào DB thông qua phương thức validateAsync
@@ -101,13 +101,13 @@ const findOneByEmail = async (emailValue) => {
 }
 
 // Hàm cập nhật User
-const updateData = async (userId, data) => {
+const update = async (userId, updateData) => {
   try {
     // Xóa đi các trường không muốn cập nhật:
     // VD: _id, createdAt, ...vv
-    Object.keys(data).forEach(fieldName => {
+    Object.keys(updateData).forEach(fieldName => {
       if (INVALID_UPDATE_FIELDS.includes(fieldName)) {
-        delete data[fieldName]
+        delete updateData[fieldName]
       }
     })
 
@@ -116,7 +116,7 @@ const updateData = async (userId, data) => {
       .findOneAndUpdate(
         // phương thức này có trong mondoDB
         { _id: new ObjectId(String(userId)) },
-        { $set: data }, // doc: https://www.mongodb.com/docs/manual/reference/operator/update/push/
+        { $set: updateData }, // doc: https://www.mongodb.com/docs/manual/reference/operator/update/push/
         { returnDocument: 'after' } // Muốn trả về bản ghi sau khi đã findOneAndUpdate thì phải có phương thức returnDocument = false
       )
     return result
@@ -147,6 +147,6 @@ export const userModel = {
   createNew,
   findOneById,
   findOneByEmail,
-  updateData,
+  update,
   deleteOneById
 }
