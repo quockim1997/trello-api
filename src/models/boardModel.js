@@ -1,19 +1,15 @@
-/**
- * Updated by trungquandev.com's author on August 17 2023
- * YouTube: https://youtube.com/@trungquandev
- * "A bit of fragrance clings to the hand that gives flowers!"
- */
-
-// Thư viện ngoài
-import Joi from 'joi'
-import { ObjectId } from 'mongodb'
-
-// Local
+/* Local */
 import { OBJECT_ID_RULE, OBJECT_ID_RULE_MESSAGE } from '~/utils/validators.js'
 import { GET_DB } from '~/config/mongodb.js'
 import { BOARD_TYPE } from '~/utils/constants.js'
 import { columnModel } from '~/models/columnModel.js'
 import { cardModel } from '~/models/cardModel.js'
+import { pagingSkipValue } from '~/utils/algorithms.js'
+
+/* Library */
+import Joi from 'joi'
+import { ObjectId } from 'mongodb'
+
 
 // Define Conllection (Name & Schema)
 const BOARD_COLLECTION_NAME = 'boards'
@@ -24,6 +20,16 @@ const BOARD_COLLECTION_SCHEMA = Joi.object({
   description: Joi.string().required().min(3).max(256).trim().strict(),
 
   columnOrderIds: Joi.array()
+    .items(Joi.string().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE))
+    .default([]),
+
+  // Những Admin của board
+  ownerIds: Joi.array()
+    .items(Joi.string().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE))
+    .default([]),
+
+  // Những thành viên của board
+  memberIds : Joi.array()
     .items(Joi.string().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE))
     .default([]),
 
@@ -181,6 +187,64 @@ const updateData = async (boardId, data) => {
   }
 }
 
+const getBoards = async (userId, page, itemsPerPage) => {
+  try {
+    // Các điều kiện để thực hiện một truy vấn
+    const queryConditions = [
+      // Điều kiện 01: Board chưa bị xóa
+      { _destroy: false },
+      // Điều kiện 02: userId đang thực hiện request này nó phải thuộc vào một
+      // trong 2 mảng ownerIds hoặc memberIds (có nghĩa là: 1.phải là chủ của board đấy hoặc 2.phải là thành viên của cái board đấy),
+      // sử dụng toán tử $all của mongodb
+      // Toán tử $or có nghĩa là: 1.phải là chủ của board đấy HOẶC 2.phải là thành viên của cái board đấy, thì sẽ lấy được board đấy ra
+      { $or: [
+        { ownerIds: { $all: [new ObjectId(String(userId))] } },
+        { memberIds: { $all: [new ObjectId(String(userId))] } }
+      ] }
+    ]
+
+    const query = await GET_DB()
+      .collection(BOARD_COLLECTION_NAME)
+      .aggregate(
+        [
+        // Phải thỏa mãn 2 điều kiện bên trên.
+          { $match: { $and: queryConditions } },
+
+          // sort title của board theo A-Z (mặc định sẽ bị chữ B hoa đứng trước chữ a thường, theo chuẩn bảng mã ASCII).
+          { $sort: { title: 1 } },
+
+          // $facet để xử lý nhiều luồng trong một query.
+          { $facet: {
+          // Luồng 01: Query boards.
+            'queryBoards': [
+              { $skip: pagingSkipValue(page, itemsPerPage) }, // Bỏ qua số lượng bản ghi của những page trước đó
+              { $limit: itemsPerPage } // Giới hạn tối đa số lượng bản ghi trả về trên một page
+            ],
+
+            // Luồng 02: Query đếm tổng tất cả số lượng bảng ghi boards trong DB và trả về vào biến countedAllBoards
+            'queryTotalBoards': [{ $count: 'countedAllBoards' }]
+          } }
+        ],
+        // Khai báo thêm thuộc tính collation locale 'en' để fix vụ chữ B và a thường ở trên
+        // Doc: https://www.mongodb.com/docs/v6.0/reference/collation/#std-label-collation-document-fields
+        { collation: { locale: 'en' } }
+      ).toArray()
+
+    console.log('query: ', query)
+
+    // Lấy response trả về của thằng mondoDB là dạng object
+    const res = query[0]
+
+    return {
+      boards: res.queryBoards || [], // Lấy theo tên luồng 01 bên trên
+      totalBoards: res.queryTotalBoards[0]?.countedAllBoards || 0 // Lấy theo tên luồng 02 bên trên
+    }
+
+  } catch (error) {
+    throw new Error(error)
+  }
+}
+
 export const boardModel = {
   BOARD_COLLECTION_NAME,
   BOARD_COLLECTION_SCHEMA,
@@ -189,5 +253,6 @@ export const boardModel = {
   getDetails,
   pushColumnOrderIds,
   updateData,
-  pullColumnOrderIds
+  pullColumnOrderIds,
+  getBoards
 }

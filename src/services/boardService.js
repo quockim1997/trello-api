@@ -13,6 +13,7 @@ import ApiError from '~/utils/ApiError.js'
 import { StatusCodes } from 'http-status-codes'
 import { columnModel } from '~/models/columnModel.js'
 import { cardModel } from '~/models/cardModel.js'
+import { DEFAULT_PAGE, DEFAULT_ITEMS_PER_PAGE } from '~/utils/constants.js'
 
 // Thư viện ngoài
 import { cloneDeep } from 'lodash'
@@ -128,9 +129,24 @@ const moveCardToDifferentColumn = async (reqBody) => {
   }
 }
 
+const getBoards = async (userId, page, itemsPerPage) => {
+  try {
+    // Nếu không tồn tại page hoặc itemsPerPage từ phía FE thì BE sẽ cần phải luôn gán giá trị mặc định
+    if (!page) page = DEFAULT_PAGE
+    if (!itemsPerPage) itemsPerPage = DEFAULT_ITEMS_PER_PAGE
+
+    const result = await boardModel.getBoards(userId, parseInt(page, 10), parseInt(itemsPerPage, 10))
+
+    return result
+  } catch (error) {
+    throw error
+  }
+}
+
 export const boardService = {
   createNew,
   getDetails,
   updateData,
-  moveCardToDifferentColumn
+  moveCardToDifferentColumn,
+  getBoards
 }
