@@ -18,7 +18,7 @@ import { DEFAULT_PAGE, DEFAULT_ITEMS_PER_PAGE } from '~/utils/constants.js'
 // Thư viện ngoài
 import { cloneDeep } from 'lodash'
 
-const createNew = async (data) => {
+const createNew = async (userId, data) => {
   try {
     const newBoard = {
       ...data,
@@ -26,7 +26,7 @@ const createNew = async (data) => {
     }
 
     // Gọi tới tầng Model để xử lý lưu bản ghi newBoard vào trong Database
-    const createdBoard = await boardModel.createNew(newBoard)
+    const createdBoard = await boardModel.createNew(userId, newBoard)
     console.log(createdBoard)
 
     // Vì MongoDB không trả về đầy đủ bản ghi mà chỉ trả về insertedId của mỗi bản ghi
@@ -46,10 +46,10 @@ const createNew = async (data) => {
   }
 }
 
-const getDetails = async (boardId) => {
+const getDetails = async (userId, boardId) => {
   try {
     // Gọi tới tầng Model để xử lý lấy bản ghi trong DB ra
-    const board = await boardModel.getDetails(boardId)
+    const board = await boardModel.getDetails(userId, boardId)
 
     if (!board) {
       throw new ApiError(StatusCodes.NOT_FOUND, 'Board not found')

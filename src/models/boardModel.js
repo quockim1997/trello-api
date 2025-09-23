@@ -50,15 +50,21 @@ const validateBeforeCreate = async (data) => {
 }
 
 // Hàm tạo mới một data mới
-const createNew = async (data) => {
+const createNew = async (userId, data) => {
   try {
     // Lưu data đã validate vào biến này và sử dụng biến này đưa vào phương thức insertOne để lưu vào DB
     const dataBeforeValidate = await validateBeforeCreate(data)
 
+    // Khi tạo mới board thì userId sẽ là chủ của cái board đó nên sẽ lưu userId vào ownerIds
+    const newBoardToAdd = {
+      ...dataBeforeValidate,
+      ownerIds: [new ObjectId(String(userId))]
+    }
+
     // Thêm mới(insert) một document(data) vào collection(bảng) trong MongoDB.
     const createdBoard = await GET_DB()
       .collection(BOARD_COLLECTION_NAME)
-      .insertOne(dataBeforeValidate)
+      .insertOne(newBoardToAdd)
 
     // Trả kết quả về tầng Service
     return createdBoard
@@ -87,16 +93,32 @@ const findOneById = async (boardId) => {
 // Hàm lấy data theo id
 // Hàm này lấy ra Board, Column và Card khác với hàm findOneById ở trên
 // Query tổng hợp (aggregate) để lấy toàn bộ Column và Card thuộc về Board
-const getDetails = async (boardId) => {
+const getDetails = async (userId, boardId) => {
   try {
+    // Các điều kiện để thực hiện một truy vấn
+    const queryConditions = [
+      // Điều kiện 01: Board theo _id
+      { _id: new ObjectId(String(boardId)) },
+
+      // Điều kiện 02: Board chưa bị xóa
+      { _destroy: false },
+
+      // Điều kiện 03: userId đang thực hiện request này nó phải thuộc vào một
+      // trong 2 mảng ownerIds hoặc memberIds (có nghĩa là: 1.phải là chủ của board đấy hoặc 2.phải là thành viên của cái board đấy),
+      // sử dụng toán tử $all của mongodb
+      // Toán tử $or có nghĩa là: 1.phải là chủ của board đấy HOẶC 2.phải là thành viên của cái board đấy, thì sẽ lấy được board đấy ra
+      { $or: [
+        { ownerIds: { $all: [new ObjectId(String(userId))] } },
+        { memberIds: { $all: [new ObjectId(String(userId))] } }
+      ] }
+    ]
+
     const result = await GET_DB()
       .collection(BOARD_COLLECTION_NAME)
       .aggregate([
         {
-          $match: {
-            _id: new ObjectId(String(boardId)), // Tìm Board theo _id
-            _destroy: false // Tìm Board theo _destroy(xóa cứng hoặc xóa mềm)
-          }
+          // Phải thỏa mãn 3 điều kiện bên trên.
+          $match: { $and: queryConditions }
         },
         {
           $lookup: {
