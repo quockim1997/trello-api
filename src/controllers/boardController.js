@@ -18,8 +18,13 @@ const createNew = async (req, res, next) => {
     console.log('req.query:', req.query)
     console.log('req.param:', req.param)
 
+    // Do hàm createNew này phải đi qua tầng Middleware nên nó đã có được accessToken
+    // thông qua jwtDecoded (tự định nghĩa bên file authMiddleware),
+    // từ đó ta lấy được _id gán vào biến userId.
+    const userId = req.jwtDecoded._id
+
     // Điều hướng dữ liệu sang tầng Service
-    const createdBoard = await boardService.createNew(req.body)
+    const createdBoard = await boardService.createNew(userId, req.body)
 
     // Có kết quả thì trả về Client
     res.status(StatusCodes.CREATED).json(createdBoard)
@@ -32,11 +37,16 @@ const createNew = async (req, res, next) => {
 
 const getDetails = async (req, res, next) => {
   try {
+    // Do hàm getDetails này phải đi qua tầng Middleware nên nó đã có được accessToken
+    // thông qua jwtDecoded (tự định nghĩa bên file authMiddleware),
+    // từ đó ta lấy được _id gán vào biến userId.
+    const userId = req.jwtDecoded._id
+
     // console.log('req.params:', req.params)
     const boardId = req.params.id
 
     // Điều hướng dữ liệu sang tầng Service
-    const board = await boardService.getDetails(boardId)
+    const board = await boardService.getDetails(userId, boardId)
 
     // Có kết quả thì trả về Client
     res.status(StatusCodes.OK).json(board)
@@ -80,7 +90,7 @@ const moveCardToDifferentColumn = async (req, res, next) => {
 
 const getBoards = async (req, res, next) => {
   try {
-    // Do hàm update này phải đi qua tầng Middleware nên nó đã có được accessToken
+    // Do hàm getBoards này phải đi qua tầng Middleware nên nó đã có được accessToken
     // thông qua jwtDecoded (tự định nghĩa bên file authMiddleware),
     // từ đó ta lấy được _id gán vào biến userId.
     const userId = req.jwtDecoded._id
