@@ -78,10 +78,29 @@ const moveCardToDifferentColumn = async (req, res, next) => {
   }
 }
 
+const getBoards = async (req, res, next) => {
+  try {
+    // Do hàm update này phải đi qua tầng Middleware nên nó đã có được accessToken
+    // thông qua jwtDecoded (tự định nghĩa bên file authMiddleware),
+    // từ đó ta lấy được _id gán vào biến userId.
+    const userId = req.jwtDecoded._id
+
+    // page và itemsPerPage được truyền vào trong query url từ phía FE nên BE sẽ lấy thông qua req.query
+    const { page, itemsPerPage } = req.query
+    const result = await boardService.getBoards(userId, page, itemsPerPage)
+
+    res.status(StatusCodes.OK).json(result)
+  } catch (error) {
+    // Khi sử dụng next thì sẽ đưa về Middleware để xử lý lỗi tập chung
+    next(error)
+  }
+}
+
 
 export const boardController = {
   createNew,
   getDetails,
   updateData,
-  moveCardToDifferentColumn
+  moveCardToDifferentColumn,
+  getBoards
 }

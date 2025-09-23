@@ -6,7 +6,6 @@
 
 // Thư viện ngoài
 import express from 'express'
-import { StatusCodes } from 'http-status-codes'
 
 // Local
 import { boardValidation } from '~/validations/boardValidation.js'
@@ -17,9 +16,7 @@ const Router = express.Router()
 
 // Trước khi chạy vào tầng Validation và Controller thì phải chạy qua tầng Middleware
 Router.route('/')
-  .get(authMiddleware.isAuthorized, (req, res) => {
-    res.status(StatusCodes.OK).json({ message: 'GET: APIs get list board' })
-  })
+  .get(authMiddleware.isAuthorized, boardController.getBoards)
   // boardValidation validate ok rồi thì mới chạy tới boardController thông qua next() trong boardValidation
   .post(authMiddleware.isAuthorized, boardValidation.createNew, boardController.createNew)
 
