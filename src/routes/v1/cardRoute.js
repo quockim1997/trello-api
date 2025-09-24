@@ -19,4 +19,7 @@ Router.route('/')
   // cardValidation validate ok rồi thì mới chạy tới cardController thông qua next() trong cardValidation
   .post(authMiddleware.isAuthorized, cardValidation.createNew, cardController.createNew)
 
+Router.route('/:id')
+  .put(authMiddleware.isAuthorized, cardValidation.updateData, cardController.updateData)
+
 export const cardRoute = Router

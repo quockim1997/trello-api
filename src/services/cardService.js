@@ -40,6 +40,25 @@ const createNew = async (data) => {
   }
 }
 
+const updateData = async (cardId, reqBody) => {
+  try {
+    // Biến chứa dữ liệu gửi lên để update
+    const data = {
+      ...reqBody,
+      updatedAt: Date.now()
+    }
+    // Gọi tới tầng Model để xử lý lấy bản ghi trong DB ra
+    const updatedCard = await cardModel.updateData(cardId, data)
+
+    // Trả kết quả về tầng Controller
+    // Trong Service luôn phải có return
+    return updatedCard
+  } catch (error) {
+    throw error
+  }
+}
+
 export const cardService = {
-  createNew
+  createNew,
+  updateData
 }

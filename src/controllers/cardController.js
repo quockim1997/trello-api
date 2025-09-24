@@ -25,6 +25,24 @@ const createNew = async (req, res, next) => {
   }
 }
 
+const updateData = async (req, res, next) => {
+  try {
+    // console.log('req.params:', req.params)
+    const cardId = req.params.id
+
+    // Điều hướng dữ liệu sang tầng Service
+    const updatedCard = await cardService.updateData(cardId, req.body)
+
+    // Có kết quả thì trả về Client
+    res.status(StatusCodes.OK).json(updatedCard)
+    // throw new ApiError(StatusCodes.BAD_GATEWAY, 'test error tầng controller')
+  } catch (error) {
+    // Khi sử dụng next thì sẽ đưa về Middleware để xử lý lỗi tập chung
+    next(error)
+  }
+}
+
 export const cardController = {
-  createNew
+  createNew,
+  updateData
 }
