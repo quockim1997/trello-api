@@ -7,6 +7,8 @@
 // Local
 import { cardModel } from '~/models/cardModel.js'
 import { columnModel } from '~/models/columnModel.js'
+import { CloudinaryProvider } from '~/providers/CloudinaryProvider.js'
+
 
 // Thư viện ngoài
 
@@ -40,15 +42,33 @@ const createNew = async (data) => {
   }
 }
 
-const updateData = async (cardId, reqBody) => {
+const updateData = async (cardId, reqBody, cardCoverFile) => {
   try {
     // Biến chứa dữ liệu gửi lên để update
     const data = {
       ...reqBody,
       updatedAt: Date.now()
     }
-    // Gọi tới tầng Model để xử lý lấy bản ghi trong DB ra
-    const updatedCard = await cardModel.updateData(cardId, data)
+
+    let updatedCard = {}
+
+    if (cardCoverFile) {
+      //  Trường hợp upload file lên Clound Storage, cụ thể là Cloudinary
+      // Chỉ truyền lên buffer
+      // console.log(cardCoverFile)
+      const uploadResult = await CloudinaryProvider.streamUpload(cardCoverFile.buffer, 'card-covers')
+      console.log('uploadResult: ', uploadResult)
+
+      // Lưu lại url của file ảnh vào trong DB
+      updatedCard = await cardModel.updateData(cardId, {
+        cover: uploadResult.secure_url
+      })
+    } else {
+      // Gọi tới tầng Model để xử lý lấy bản ghi trong DB ra
+      // Các trường hợp update chung như title, description
+      updatedCard = await cardModel.updateData(cardId, data)
+    }
+
 
     // Trả kết quả về tầng Controller
     // Trong Service luôn phải có return

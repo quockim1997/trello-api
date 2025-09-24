@@ -5,6 +5,7 @@ import { BOARD_TYPE } from '~/utils/constants.js'
 import { columnModel } from '~/models/columnModel.js'
 import { cardModel } from '~/models/cardModel.js'
 import { pagingSkipValue } from '~/utils/algorithms.js'
+import { userModel } from '~/models/userModel.js'
 
 /* Library */
 import Joi from 'joi'
@@ -134,6 +135,28 @@ const getDetails = async (userId, boardId) => {
             localField: '_id', // Đây là id của bảng Board
             foreignField: 'boardId', // Còn đây là id mà bảng Card dùng để liên kết với bảng Boad để cho biết Card này thuộc Board nào
             as: 'cards' // Khi Board lấy được danh sách Card thì danh sách này sẽ được gán vào trường này có tên là cards (trường này do ta tự để tên)
+          }
+        },
+        {
+          $lookup: {
+            from: userModel.USER_COLLECTION_NAME, // Tìm đến bảng User
+            localField: 'ownerIds', // Đây là mảng
+            foreignField: '_id', // Còn đây là id mà bảng User dùng để liên kết với bảng Boad để cho biết User này thuộc Board nào
+            as: 'owners', // Khi Board lấy được danh sách User thì danh sách này sẽ được gán vào trường này có tên là owners (trường này do ta tự để tên)
+            // pipeline trong lookup là để xử lý một hoặc nhiều luồng cần thiết
+            // $project để chỉ định và field không muốn lấy về bằng cách gán nó giá trị 0
+            pipeline: [{ $project: { 'password': 0, 'verifyToken': 0 } }]
+          }
+        },
+        {
+          $lookup: {
+            from: userModel.USER_COLLECTION_NAME, // Tìm đến bảng User
+            localField: 'memberIds', // Đây là mảng
+            foreignField: '_id', // Còn đây là id mà bảng User dùng để liên kết với bảng Boad để cho biết User này thuộc Board nào
+            as: 'members', // Khi Board lấy được danh sách User thì danh sách này sẽ được gán vào trường này có tên là owners (trường này do ta tự để tên)
+            // pipeline trong lookup là để xử lý một hoặc nhiều luồng cần thiết
+            // $project để chỉ định và field không muốn lấy về bằng cách gán nó giá trị 0
+            pipeline: [{ $project: { 'password': 0, 'verifyToken': 0 } }]
           }
         }
       ])
