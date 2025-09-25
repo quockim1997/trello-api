@@ -146,6 +146,27 @@ const deleteManyByColumnId = async (columnId) => {
     throw new Error(error)
   }
 }
+/**
+ * Đẩy một phần tử comment vào đầu mảng comments!.
+ * - Trong JS, ngược lại với push (thêm phần tử vào cuối mảng) sẽ là unshift (thêm phần tử vào đầu mảng).
+ * - Nhưng trong mongoDB hiện tại chỉ có $push - mặc định đẩy phần tử vào cuối mảng.
+ * Dĩ nhiên cứ lưu comment mới vào cuối mảng cũng được, nhưng nay sẽ học cách để thêm phần tử vào đầu mảng trong mongoDB.
+ * Vẫn dùng $push, nhưng bọc data vào Array để trong $each và chỉ định $position: 0
+*/
+const unshifNewComment = async (cardId, commentData) => {
+  try {
+    const result = await GET_DB()
+      .collection(CARD_COLLECTION_NAME)
+      .findOneAndUpdate(
+        { _id: new ObjectId(String(cardId)) },
+        { $push: { comments: { $each: [commentData], $position: 0 } } }, // Đẩy phần tử vào đầu mảng
+        { returnDocument: 'after' } // Muốn trả về bản ghi sau khi đã findOneAndUpdate thì phải có phương thức returnDocument = false
+      )
+    return result
+  } catch (error) {
+    throw new Error(error)
+  }
+}
 
 export const cardModel = {
   CARD_COLLECTION_NAME,
@@ -153,5 +174,6 @@ export const cardModel = {
   createNew,
   findOneById,
   updateData,
-  deleteManyByColumnId
+  deleteManyByColumnId,
+  unshifNewComment
 }
