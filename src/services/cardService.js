@@ -42,7 +42,7 @@ const createNew = async (data) => {
   }
 }
 
-const updateData = async (cardId, reqBody, cardCoverFile) => {
+const updateData = async (cardId, reqBody, cardCoverFile, userInfo) => {
   try {
     // Biến chứa dữ liệu gửi lên để update
     const data = {
@@ -63,6 +63,16 @@ const updateData = async (cardId, reqBody, cardCoverFile) => {
       updatedCard = await cardModel.updateData(cardId, {
         cover: uploadResult.secure_url
       })
+    } else if (reqBody.commentToAdd) {
+      // Tạo dữ liệu commnet để thêm vào DB, cần bổ sung thêm những field cần thiết
+      const commentData = {
+        ...reqBody.commentToAdd,
+        commentedAt: Date.now(),
+        userId: userInfo._id,
+        userEmail: userInfo.email
+      }
+      // Hàm đẩy comment vào đầu mảng
+      updatedCard = await cardModel.unshifNewComment(cardId, commentData)
     } else {
       // Gọi tới tầng Model để xử lý lấy bản ghi trong DB ra
       // Các trường hợp update chung như title, description

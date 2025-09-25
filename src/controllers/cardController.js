@@ -30,9 +30,12 @@ const updateData = async (req, res, next) => {
     // console.log('req.params:', req.params)
     const cardId = req.params.id
     const cardCoverFile = req.file
+    const userInfo = req.jwtDecoded
+
+    console.log(userInfo)
 
     // Điều hướng dữ liệu sang tầng Service
-    const updatedCard = await cardService.updateData(cardId, req.body, cardCoverFile)
+    const updatedCard = await cardService.updateData(cardId, req.body, cardCoverFile, userInfo)
 
     // Có kết quả thì trả về Client
     res.status(StatusCodes.OK).json(updatedCard)
