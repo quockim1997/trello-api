@@ -2,6 +2,8 @@
 import { OBJECT_ID_RULE, OBJECT_ID_RULE_MESSAGE } from '~/utils/validators.js'
 import { INVITATION_TYPES, BOARD_INVITATION_STATUS } from '~/utils/constants.js'
 import { GET_DB } from '~/config/mongodb.js'
+import { userModel } from './userModel'
+import { boardModel } from './boardModel'
 
 /* Library */
 import Joi from 'joi'
@@ -121,10 +123,69 @@ const update = async (invitationId, updateData) => {
   }
 }
 
+// Hàm lấy data theo id
+// Query tổng hợp (aggregate) để lấy những bản ghi invation thuộc về một User cụ thể
+const findByUser = async (userId) => {
+  try {
+    // Các điều kiện để thực hiện một truy vấn
+    const queryConditions = [
+      // Điều kiện 01: Board theo _id
+      // Tìm theo inviteeId (người được mời - chính là người đang thực hiện request này)
+      { inviteeId: new ObjectId(String(userId)) },
+
+      // Điều kiện 02: Board chưa bị xóa
+      { _destroy: false }
+    ]
+
+    const results = await GET_DB()
+      .collection(INVITATION_COLLECTION_NAME)
+      .aggregate([
+        {
+          // Phải thỏa mãn 2 điều kiện bên trên.
+          $match: { $and: queryConditions }
+        },
+        {
+          $lookup: {
+            from: userModel.USER_COLLECTION_NAME, // Tìm đến bảng User
+            localField: 'inviterId', // Lấy thông tin thằng mời
+            foreignField: '_id', // Còn đây là id mà bảng User dùng để liên kết với bảng Invitation để cho biết User này thuộc Invitation nào
+            as: 'inviter', // Khi User lấy được danh sách invations thì danh sách này sẽ được gán vào trường này có tên là inviter
+            // pipeline trong lookup là để xử lý một hoặc nhiều luồng cần thiết
+            // $project để chỉ định và field không muốn lấy về bằng cách gán nó giá trị 0
+            pipeline: [{ $project: { 'password': 0, 'verifyToken': 0 } }]
+          }
+        },
+        {
+          $lookup: {
+            from: userModel.USER_COLLECTION_NAME, // Tìm đến bảng User
+            localField: 'inviteeId', // Lấy thông tin thằng được mời
+            foreignField: '_id', // Còn đây là id mà bảng User dùng để liên kết với bảng Invitation để cho biết User này thuộc Invitation nào
+            as: 'invitee', // Khi User lấy được danh sách invations thì danh sách này sẽ được gán vào trường này có tên là inviter
+            // pipeline trong lookup là để xử lý một hoặc nhiều luồng cần thiết
+            // $project để chỉ định và field không muốn lấy về bằng cách gán nó giá trị 0
+            pipeline: [{ $project: { 'password': 0, 'verifyToken': 0 } }]
+          }
+        },
+        {
+          $lookup: {
+            from: boardModel.BOARD_COLLECTION_NAME, // Tìm đến bảng Board
+            localField: 'boardInvitation.boardId', //Lấy thông tin của Board
+            foreignField: '_id', // Còn đây là id mà bảng Board dùng để liên kết với bảng Invitation để cho biết Board này thuộc Invitation nào
+            as: 'board' // Khi Board lấy được danh sách Invations thì danh sách này sẽ được gán vào trường này có tên là board
+          }
+        }
+      ]).toArray() // phải có toArray() để lấy ra đúng kết quả mong muốn
+    return results
+  } catch (error) {
+    throw new Error(error)
+  }
+}
+
 export const invitationModel = {
   INVITATION_COLLECTION_NAME,
   INVITATION_COLLECTION_SCHEMA,
   createNewBoardInvitation,
   findOneById,
-  update
+  update,
+  findByUser
 }

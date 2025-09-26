@@ -275,7 +275,7 @@ const getBoards = async (userId, page, itemsPerPage) => {
         { collation: { locale: 'en' } }
       ).toArray()
 
-    console.log('query: ', query)
+    // console.log('query: ', query)
 
     // Lấy response trả về của thằng mondoDB là dạng object
     const res = query[0]
