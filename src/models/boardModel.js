@@ -290,6 +290,22 @@ const getBoards = async (userId, page, itemsPerPage) => {
   }
 }
 
+const pushMemberIds = async (boardId, userId) => {
+  try {
+    const result = await GET_DB()
+      .collection(BOARD_COLLECTION_NAME)
+      .findOneAndUpdate(
+        // phương thức này có trong mondoDB
+        { _id: new ObjectId(String(boardId)) },
+        { $push: { memberIds: new ObjectId(String(userId)) } }, // doc: https://www.mongodb.com/docs/manual/reference/operator/update/pull/
+        { returnDocument: 'after' } // Muốn trả về bản ghi sau khi đã findOneAndUpdate thì phải có phương thức returnDocument = false
+      )
+    return result
+  } catch (error) {
+    throw new Error(error)
+  }
+}
+
 export const boardModel = {
   BOARD_COLLECTION_NAME,
   BOARD_COLLECTION_SCHEMA,
@@ -299,5 +315,6 @@ export const boardModel = {
   pushColumnOrderIds,
   updateData,
   pullColumnOrderIds,
-  getBoards
+  getBoards,
+  pushMemberIds
 }

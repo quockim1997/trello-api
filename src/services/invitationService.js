@@ -82,8 +82,59 @@ const getInvitations = async (userId) => {
   }
 }
 
+const updateBoardInvitation = async (userId, invitationId, status) => {
+  console.log('userId: ', userId)
+  try {
+    // Tìm bản ghi invitation trong model
+    const getInvitation = await invitationModel.findOneById(invitationId)
+    console.log('getInvitation: ', getInvitation)
+    if (!getInvitation) throw new ApiError(StatusCodes.NOT_FOUND, 'Invitation not found!')
+
+    // Sau khi có Invitation rồi thì lấy full thông tin của board
+    const boardId = getInvitation.boardInvitation.boardId
+    console.log('boardId: ', boardId)
+    const getBoard = await boardModel.findOneById(boardId)
+    if (!getBoard) throw new ApiError(StatusCodes.NOT_FOUND, 'Board not found!')
+
+    // Kiểm tra xem nếu status là ACCEPTED join board mà user (invitee)
+    // đã là owner hoặc member của board rồi thì trả về thông báo lỗi luôn.
+    // Note: 2 mảng memberIds và ownerIds của board nó đang là kiểu dữ liệu ObjectId
+    // nên cho nó về String hết luôn để check.
+    const boardOwnerAndMemberIds = getBoard.ownerIds.concat(getBoard.memberIds).toString()
+    console.log(boardOwnerAndMemberIds)
+    if (status === BOARD_INVITATION_STATUS.ACCEPTED && boardOwnerAndMemberIds.includes(userId)) {
+      throw new ApiError(StatusCodes.NOT_ACCEPTABLE, 'You are already a member of this board!')
+    }
+
+    // Tạo dữ liệu để update bản ghi Invitation
+    const updateData = {
+      boardInvitation: {
+        ...getInvitation.boardInvitation,
+        // status đầu tiên là field trong invitationModel
+        // status thứ 2 là của FE truyền (ACCEPTED hoặc REJECTED) lên thông qua tham số
+        status: status
+      }
+    }
+
+    // Bước 1: Cập nhật status trong bản ghi Invitations
+    const updatedInvitation = await invitationModel.update(invitationId, updateData)
+
+    // Bước 2: Nếu trường hợp ACCEPT một lời mời thành công, thì cần phải thêm
+    // thông tin user(userId) vào bản ghi memberIds trong collection board.
+    if (updatedInvitation.boardInvitation.status === BOARD_INVITATION_STATUS.ACCEPTED) {
+      await boardModel.pushMemberIds(boardId, userId)
+    }
+
+    return updatedInvitation
+
+  } catch (error) {
+    throw new Error(error)
+  }
+}
+
 
 export const invitationService = {
   createNewBoardInvitation,
-  getInvitations
+  getInvitations,
+  updateBoardInvitation
 }
