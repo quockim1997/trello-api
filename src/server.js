@@ -1,22 +1,20 @@
-/* eslint-disable no-console */
-/**
- * Updated by trungquandev.com's author on August 17 2023
- * YouTube: https://youtube.com/@trungquandev
- * "A bit of fragrance clings to the hand that gives flowers!"
- */
+/* Local */
+import { CONNECT_DB, CLOSE_DB } from '~/config/mongodb'
+import { env } from '~/config/environment.js'
+import { APIs_V1 } from '~/routes/v1/index.js'
+import { errorHandlingMiddleware } from './middlewares/errorHandlingMiddleware.js'
+import { inviteUserToBoardSocket } from '~/sockets/inviteUserToBoardSocket.js'
 
-// Thư mục ngoài
+/* Library */
 import express from 'express'
 import exitHook from 'async-exit-hook'
 import cors from 'cors'
 import { corsOptions } from './config/cors.js'
 import cookieParser from 'cookie-parser' // https://www.npmjs.com/package/cookie-parser
-
-// Local
-import { CONNECT_DB, CLOSE_DB } from '~/config/mongodb'
-import { env } from '~/config/environment.js'
-import { APIs_V1 } from '~/routes/v1/index.js'
-import { errorHandlingMiddleware } from './middlewares/errorHandlingMiddleware.js'
+// Xử lý socket real-time với gói socket.io
+// https://socket.io/get-started/chat/#integrating-socketio
+import socketIo from 'socket.io'
+import http from 'http'
 
 const START_SERVER = () => {
   const app = express()
@@ -44,10 +42,25 @@ const START_SERVER = () => {
   // Middleware xử lý lỗi tập chung
   app.use(errorHandlingMiddleware)
 
+  // Tạo server mới bọc app của express để làm real-time với socket.io
+  const server = http.createServer(app)
+
+  // Khởi tạo biến io với server và cors
+  const io = socketIo(server, { cors: corsOptions })
+  io.on('connection', (socket) => {
+    /* Gọi các socket tùy theo tính năng ở đây */
+
+    // Tính năng 1: mời User vào Board
+    inviteUserToBoardSocket(socket)
+
+    // Tính năng ...vv
+  })
+
   // Môi trường Production (cụ thể hiện tại đang deploy trên render.com)
   if (env.BUILD_MODE === 'production') {
     // Khi deploy lên thì render.com sẽ tự động render ra cho một PORT ngẫu nhiên
-    app.listen(process.env.PORT, () => {
+    // Dùng server.listen thay vì app.listen vì lúc này server đã bao gồm express app và đã config socket.io
+    server.listen(process.env.PORT, () => {
       // eslint-disable-next-line no-console
       console.log(
         `Production: Hello ${env.AUTHOR}, BE Server is running successfully running at PORT: ${process.env.PORT}`
@@ -55,7 +68,8 @@ const START_SERVER = () => {
     })
   } else {
     // Môi trường Local
-    app.listen(env.LOCAL_DEV_APP_PORT, env.LOCAL_DEV_APP_HOST, () => {
+    // Dùng server.listen thay vì app.listen vì lúc này server đã bao gồm express app và đã config socket.io
+    server.listen(env.LOCAL_DEV_APP_PORT, env.LOCAL_DEV_APP_HOST, () => {
       // eslint-disable-next-line no-console
       console.log(
         `Local: Hello ${env.AUTHOR}, BE Server is running successfully running at HOST: ${env.LOCAL_DEV_APP_HOST} and PORT: ${env.LOCAL_DEV_APP_PORT}`
