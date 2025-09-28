@@ -232,7 +232,7 @@ const updateData = async (boardId, data) => {
   }
 }
 
-const getBoards = async (userId, page, itemsPerPage) => {
+const getBoards = async (userId, page, itemsPerPage, queryFilters) => {
   try {
     // Các điều kiện để thực hiện một truy vấn
     const queryConditions = [
@@ -247,6 +247,24 @@ const getBoards = async (userId, page, itemsPerPage) => {
         { memberIds: { $all: [new ObjectId(String(userId))] } }
       ] }
     ]
+
+    // Xử lý query filter cho từng trường hợp search board, ví dụ search theo title
+    if (queryFilters) {
+      // console.log(Object.keys(queryFilters))
+      Object.keys(queryFilters).forEach(key => {
+        // queryFilters[key] ví dụ queryFilters[title] nếu phía FE đẩy lên q[title]
+
+        /* push thêm điều kiện 03 vào queryConditions */
+        // Có phân biệt chữ hoa chữ thường
+        // queryConditions.push({ [key]: { $regex: queryFilters[key] } })
+
+        // Không phân biệt chữ hoa chữ thường
+        queryConditions.push({ [key]: { $regex: new RegExp(queryFilters[key], 'i') } })
+
+      })
+    }
+
+    console.log('queryConditions: ', queryConditions)
 
     const query = await GET_DB()
       .collection(BOARD_COLLECTION_NAME)
