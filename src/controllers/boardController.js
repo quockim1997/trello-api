@@ -14,9 +14,9 @@ import { boardService } from '~/services/boardService.js'
 
 const createNew = async (req, res, next) => {
   try {
-    console.log('req.body:', req.body)
-    console.log('req.query:', req.query)
-    console.log('req.param:', req.param)
+    // console.log('req.body:', req.body)
+    // console.log('req.query:', req.query)
+    // console.log('req.param:', req.param)
 
     // Do hàm createNew này phải đi qua tầng Middleware nên nó đã có được accessToken
     // thông qua jwtDecoded (tự định nghĩa bên file authMiddleware),

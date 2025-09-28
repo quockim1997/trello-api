@@ -83,16 +83,16 @@ const getInvitations = async (userId) => {
 }
 
 const updateBoardInvitation = async (userId, invitationId, status) => {
-  console.log('userId: ', userId)
+  // console.log('userId: ', userId)
   try {
     // Tìm bản ghi invitation trong model
     const getInvitation = await invitationModel.findOneById(invitationId)
-    console.log('getInvitation: ', getInvitation)
+    // console.log('getInvitation: ', getInvitation)
     if (!getInvitation) throw new ApiError(StatusCodes.NOT_FOUND, 'Invitation not found!')
 
     // Sau khi có Invitation rồi thì lấy full thông tin của board
     const boardId = getInvitation.boardInvitation.boardId
-    console.log('boardId: ', boardId)
+    // console.log('boardId: ', boardId)
     const getBoard = await boardModel.findOneById(boardId)
     if (!getBoard) throw new ApiError(StatusCodes.NOT_FOUND, 'Board not found!')
 
@@ -101,7 +101,7 @@ const updateBoardInvitation = async (userId, invitationId, status) => {
     // Note: 2 mảng memberIds và ownerIds của board nó đang là kiểu dữ liệu ObjectId
     // nên cho nó về String hết luôn để check.
     const boardOwnerAndMemberIds = getBoard.ownerIds.concat(getBoard.memberIds).toString()
-    console.log(boardOwnerAndMemberIds)
+    // console.log(boardOwnerAndMemberIds)
     if (status === BOARD_INVITATION_STATUS.ACCEPTED && boardOwnerAndMemberIds.includes(userId)) {
       throw new ApiError(StatusCodes.NOT_ACCEPTABLE, 'You are already a member of this board!')
     }
