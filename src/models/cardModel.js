@@ -1,16 +1,12 @@
-/**
- * Updated by trungquandev.com's author on Oct 8 2023
- * YouTube: https://youtube.com/@trungquandev
- * "A bit of fragrance clings to the hand that gives flowers!"
- */
+/* Local */
+import { EMAIL_RULE, EMAIL_RULE_MESSAGE, OBJECT_ID_RULE, OBJECT_ID_RULE_MESSAGE } from '~/utils/validators.js'
+import { GET_DB } from '~/config/mongodb.js'
+import { CARD_MEMBER_ACTIONS } from '~/utils/constants.js'
 
-// Thư viện ngoài
+/* Library */
 import Joi from 'joi'
 import { ObjectId } from 'mongodb'
 
-// Local
-import { EMAIL_RULE, EMAIL_RULE_MESSAGE, OBJECT_ID_RULE, OBJECT_ID_RULE_MESSAGE } from '~/utils/validators.js'
-import { GET_DB } from '~/config/mongodb.js'
 
 // Define Collection (name & schema)
 const CARD_COLLECTION_NAME = 'cards'
@@ -168,6 +164,36 @@ const unshifNewComment = async (cardId, commentData) => {
   }
 }
 
+/**
+ * Hàm này sẽ có nhiệm vụ xử lý cập nhật thêm hoặc xóa member khỏi card dựa theo Action,
+ * sẽ dùng $push để thêm hoặc $pull để loại bỏ ($pull trong mongoDB để lấy một phần tử ra khỏi mảng rồi xóa nó đi).
+ */
+const updateMembers = async (cardId, incomingMemberInfo) => {
+  try {
+    // Tạo ra một biến updateCondition ban đầu là rỗng
+    let updateCondition = {}
+    if (incomingMemberInfo.action === CARD_MEMBER_ACTIONS.ADD) {
+      // console.log('Trường hợp ADD dùng $push: ', incomingMemberInfo)
+      updateCondition = { $push: { memberIds: new ObjectId(String(incomingMemberInfo.userId)) } }
+    }
+    if (incomingMemberInfo.action === CARD_MEMBER_ACTIONS.REMOVE) {
+      // console.log('Trường hợp REMOVE dùng $pull: ', incomingMemberInfo)
+      updateCondition = { $pull: { memberIds: new ObjectId(String(incomingMemberInfo.userId)) } }
+    }
+    const result = await GET_DB()
+      .collection(CARD_COLLECTION_NAME)
+      .findOneAndUpdate(
+        { _id: new ObjectId(String(cardId)) },
+        updateCondition, // truyền cái updateCondition ở đây
+        { returnDocument: 'after' } // Muốn trả về bản ghi sau khi đã findOneAndUpdate thì phải có phương thức returnDocument = false
+      )
+
+    return result
+  } catch (error) {
+    throw new Error(error)
+  }
+}
+
 export const cardModel = {
   CARD_COLLECTION_NAME,
   CARD_COLLECTION_SCHEMA,
@@ -175,5 +201,6 @@ export const cardModel = {
   findOneById,
   updateData,
   deleteManyByColumnId,
-  unshifNewComment
+  unshifNewComment,
+  updateMembers
 }

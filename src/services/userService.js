@@ -205,7 +205,7 @@ const update = async (userId, reqBody, userAvatarFile) => {
       // Chỉ truyền lên buffer
       // console.log(userAvatarFile)
       const uploadResult = await CloudinaryProvider.streamUpload(userAvatarFile.buffer, 'users')
-      console.log('uploadResult: ', uploadResult)
+      // console.log('uploadResult: ', uploadResult)
 
       // Lưu lại url của file ảnh vào trong DB
       updatedUser = await userModel.update(existUser._id, {

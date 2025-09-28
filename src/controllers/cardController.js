@@ -32,7 +32,7 @@ const updateData = async (req, res, next) => {
     const cardCoverFile = req.file
     const userInfo = req.jwtDecoded
 
-    console.log(userInfo)
+    // console.log(userInfo)
 
     // Điều hướng dữ liệu sang tầng Service
     const updatedCard = await cardService.updateData(cardId, req.body, cardCoverFile, userInfo)

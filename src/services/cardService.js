@@ -73,6 +73,9 @@ const updateData = async (cardId, reqBody, cardCoverFile, userInfo) => {
       }
       // Hàm đẩy comment vào đầu mảng
       updatedCard = await cardModel.unshifNewComment(cardId, commentData)
+    } else if (reqBody.incomingMemberInfo) {
+      // Trường hợp ADD hoặc REMOVE thành viên ra khỏi Card
+      updatedCard = await cardModel.updateMembers(cardId, reqBody.incomingMemberInfo)
     } else {
       // Gọi tới tầng Model để xử lý lấy bản ghi trong DB ra
       // Các trường hợp update chung như title, description
